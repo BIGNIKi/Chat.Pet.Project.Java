@@ -1,0 +1,6 @@
+package org.example.chat.application.features.commands.dtos;
+
+public record ForCommandsDataDto(String[] parts)
+{
+
+}
