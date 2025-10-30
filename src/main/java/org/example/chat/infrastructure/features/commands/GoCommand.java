@@ -2,12 +2,15 @@ package org.example.chat.infrastructure.features.commands;
 
 import org.example.chat.application.features.commands.CommandBase;
 import org.example.chat.application.features.commands.dtos.HelpInfoDto;
+import org.example.chat.application.features.commands.validators.CommandValidator;
 import org.example.chat.application.services.UserService;
 import org.example.chat.application.services.WriterService;
 import org.example.chat.infrastructure.features.Constants;
 import org.example.chat.infrastructure.features.chat.ChatMode;
 import org.example.chat.application.features.commands.dtos.ForCommandsDataDto;
 import org.example.chat.infrastructure.features.commands.dtos.ResultOfCommandDataDto;
+import org.example.chat.infrastructure.features.commands.validators.ArgumentCountValidator;
+import org.example.chat.infrastructure.features.commands.validators.UserExistingValidator;
 
 import java.util.Objects;
 
@@ -46,22 +49,19 @@ public final class GoCommand extends CommandBase
 		Objects.requireNonNull(writerService);
 		
 		var result = new ResultOfCommandDataDto();
-		if(data.parts().length == 2)
-		{
-			var userName = data.parts()[1];
-			if(userService.isUserExist(userName))
-			{
-				result.setChatModeTo(ChatMode.WITH_USER, userName);
-			}
-			else
-			{
-				writerService.write(Constants.NO_DESTINATION_USER);
-			}
-		}
-		else
-		{
-			writerService.write(Constants.COMMAND_INCORRECT_ERROR);
-		}
+		
+		// валидация числа аргументов
+		CommandValidator checkArguments = new ArgumentCountValidator(data.parts(), 2);
+		checkArguments.validate();
+		
+		var userName = data.parts()[1];
+		
+		// валидация наличия пользователя
+		CommandValidator userExistingChecker = new UserExistingValidator(userService, userName);
+		userExistingChecker.validate();
+		
+		result.setChatModeTo(ChatMode.WITH_USER, userName);
+		
 		return result;
 	}
 	

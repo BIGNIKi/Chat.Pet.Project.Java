@@ -2,11 +2,15 @@ package org.example.chat.infrastructure.features.commands;
 
 import org.example.chat.application.features.commands.CommandBase;
 import org.example.chat.application.features.commands.dtos.HelpInfoDto;
+import org.example.chat.application.features.commands.validators.CommandValidator;
 import org.example.chat.application.services.ChatHistoryService;
+import org.example.chat.application.services.UserService;
 import org.example.chat.application.services.WriterService;
 import org.example.chat.infrastructure.features.Constants;
 import org.example.chat.application.features.commands.dtos.ForCommandsDataDto;
 import org.example.chat.infrastructure.features.commands.dtos.ResultOfCommandDataDto;
+import org.example.chat.infrastructure.features.commands.validators.ArgumentCountValidator;
+import org.example.chat.infrastructure.features.commands.validators.UserExistingValidator;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -17,6 +21,7 @@ public final class SendCommand extends CommandBase
 	private final WriterService writerService;
 	private final ChatHistoryService chatHistoryService;
 	private final String currentUserName;
+	private final UserService userService;
 	
 	private final HelpInfoDto helpInfoDto = new HelpInfoDto(
 		Constants.SEND_MSG_TO_USER_COMMAND,
@@ -30,6 +35,7 @@ public final class SendCommand extends CommandBase
 	private SendCommand()
 	{
 		super(null);
+		userService = null;
 		writerService = null;
 		chatHistoryService = null;
 		currentUserName = null;
@@ -39,12 +45,13 @@ public final class SendCommand extends CommandBase
 		ForCommandsDataDto data,
 		WriterService writerService,
 		ChatHistoryService chatHistoryService,
-		String currentUserName)
+		String currentUserName, UserService userService)
 	{
 		super(data);
 		this.writerService = writerService;
 		this.chatHistoryService = chatHistoryService;
 		this.currentUserName = currentUserName;
+		this.userService = userService;
 	}
 	
 	@Override
@@ -53,23 +60,19 @@ public final class SendCommand extends CommandBase
 		Objects.requireNonNull(chatHistoryService);
 		Objects.requireNonNull(writerService);
 		
-		if(data.parts().length >= 3)
-		{
-			
-			var userName = data.parts()[1];
-			
-			var message = buildMessage(data.parts());
-			// SendMessage под капотом проверяет, существует ли пользователь
-			var isSuccess = chatHistoryService.SendMessage(currentUserName, userName, message);
-			if(!isSuccess)
-			{
-				writerService.write(Constants.NO_DESTINATION_USER);
-			}
-		}
-		else
-		{
-			writerService.write(Constants.COMMAND_INCORRECT_ERROR);
-		}
+		// валидация числа аргументов
+		CommandValidator checkArguments = new ArgumentCountValidator(data.parts(), 3, true);
+		checkArguments.validate();
+		
+		var userName = data.parts()[1];
+		
+		// валидация наличия пользователя
+		CommandValidator userExistingChecker = new UserExistingValidator(userService, userName);
+		userExistingChecker.validate();
+		
+		var message = buildMessage(data.parts());
+		
+		chatHistoryService.SendMessage(currentUserName, userName, message);
 		
 		return new ResultOfCommandDataDto();
 	}

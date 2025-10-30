@@ -39,7 +39,8 @@ public final class CommandFactoryImpl implements CommandFactory
 				forCommandData,
 				writerService,
 				chatHistoryService,
-				currentUserName
+				currentUserName,
+				userService
 			);
 			case Command.GO -> new GoCommand(forCommandData, writerService, userService);
 			case Command.Q -> new DefaultModeCommand(forCommandData, writerService);

@@ -3,6 +3,7 @@ package org.example.chat.infrastructure.services;
 import org.example.chat.application.features.commands.CommandFactory;
 import org.example.chat.application.services.ChatService;
 import org.example.chat.application.services.ReaderService;
+import org.example.chat.application.services.ValidationErrorHandler;
 import org.example.chat.application.services.WriterService;
 import org.example.chat.infrastructure.features.Constants;
 import org.example.chat.infrastructure.features.chat.ChatMode;
@@ -16,6 +17,7 @@ public class ChatCoreService implements ChatService
 	private final ReaderService readerService;
 	private final CommandFactory commandFactory;
 	private final String currentUserName;
+	private final ValidationErrorHandler validationErrorHandler;
 	
 	private ChatMode chatMode = ChatMode.DEFAULT;
 	/**
@@ -27,11 +29,12 @@ public class ChatCoreService implements ChatService
 		WriterService writerService,
 		ReaderService readerService,
 		CommandFactory commandFactory,
-		String currentUserName)
+		String currentUserName, ValidationErrorHandler validationErrorHandler)
 	{
 		this.writerService = writerService; this.readerService = readerService;
 		this.commandFactory = commandFactory;
 		this.currentUserName = currentUserName;
+		this.validationErrorHandler = validationErrorHandler;
 	}
 	
 	@Override
@@ -50,27 +53,35 @@ public class ChatCoreService implements ChatService
 			
 			var someText = readerService.readLine();
 			
-			if(StringExtensions.startsWith(someText, '/'))
+			try
 			{
-				var loopHandler = processCommand(someText);
-				if(loopHandler.isBreakLoop())
+				if(StringExtensions.startsWith(someText, '/'))
 				{
-					break;
+					var loopHandler = processCommand(someText);
+					if(loopHandler.isBreakLoop())
+					{
+						break;
+					}
+					else if(loopHandler.isContinueLoop())
+					{
+						continue;
+					}
 				}
-				else if(loopHandler.isContinueLoop())
+				else
 				{
-					continue;
+					processChatMessage(someText);
 				}
 			}
-			else
+			catch(Exception e)
 			{
-				processChatMessage(someText);
+				validationErrorHandler.handle(e);
 			}
+		
 			
 		} while(true);
 	}
 	
-	private LoopHandlerDto processCommand(String someText)
+	private LoopHandlerDto processCommand(String someText) throws Exception
 	{
 		var methodResult = new LoopHandlerDto();
 		
@@ -113,7 +124,7 @@ public class ChatCoreService implements ChatService
 		return methodResult;
 	}
 	
-	private void processChatMessage(String someText)
+	private void processChatMessage(String someText) throws Exception
 	{
 		if(chatMode == ChatMode.DEFAULT)
 		{
