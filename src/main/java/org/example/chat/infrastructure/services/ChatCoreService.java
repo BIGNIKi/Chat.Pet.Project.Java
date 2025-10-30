@@ -43,6 +43,10 @@ public class ChatCoreService implements ChatService
 			{
 				writerService.writeWithNoLineBreak(Constants.TALL_TO_USER_MODE_INFO.formatted(userCommunicateWith));
 			}
+			else
+			{
+				writerService.writeWithNoLineBreak("# ");
+			}
 			
 			var someText = readerService.readLine();
 			

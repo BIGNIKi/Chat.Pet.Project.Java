@@ -13,7 +13,7 @@ public class Constants
 	public static final String COMMAND_INCORRECT_ERROR = "Incorrect command input. Write /help for more information";
 	public static final String USER_ALREADY_EXISTS = "User already exists";
 	public static final String NO_DESTINATION_USER = "Destination user not found";
-	public static final String TALL_TO_USER_MODE_INFO = "#%s ";
+	public static final String TALL_TO_USER_MODE_INFO = "%s# ";
 	public static final String ADD_COMMAND_HELP = "Takes one argument - name of user to add.";
 	public static final String LIST_COMMAND_HELP = "Prints all users stored at the system.";
 	public static final String SEND_COMMAND_HELP = "Takes two+ argument - user name to send message and message itself.";
